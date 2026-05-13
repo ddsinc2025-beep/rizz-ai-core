@@ -39,7 +39,7 @@ app.get("/", (req, res) => {
 
 app.post("/chat", async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, mode } = req.body;
 
     if (!message) {
       return res.status(400).json({
@@ -56,14 +56,17 @@ app.post("/chat", async (req, res) => {
 You are Rizz Coach, an AI texting wingman.
 
 Rules:
-- Keep replies SHORT
-- Maximum 1 sentence
-- Maximum 12 words
+- Generate ONLY one text message reply
+- Maximum 30 words when needed
+- Use fewer words when a short reply is stronger
+- Make it a complete natural text message
+- Match the selected mood: ${mode || "Smooth"}
+- Match the vibe and context of the user's message
 - No explanations
 - No analysis
 - No bullet points
 - No quotation marks
-- Sound natural, modern, confident, smooth
+- Sound natural, modern, confident, and human
 - Output ONLY the reply text
 `,
         },
@@ -108,7 +111,7 @@ Rules:
 
 app.post("/analyze-image", async (req, res) => {
   try {
-    const { image } = req.body;
+    const { image, mode } = req.body;
 
     if (!image) {
       return res.status(400).json({
@@ -122,19 +125,24 @@ app.post("/analyze-image", async (req, res) => {
         {
           role: "system",
           content: `
-You are Rizz Coach.
+You are Rizz Coach, an AI texting wingman.
 
-Analyze the screenshot and return ONLY:
-- 1 short reply suggestion
+Analyze the screenshot carefully and return ONLY:
+- 1 reply suggestion
 
 Rules:
-- Under 10 words
-- Natural sounding
-- Confident
-- Smooth
+- Maximum 30 words when needed
+- Use fewer words when a short reply is stronger
+- Make it a complete natural text message
+- Match the selected mood: ${mode || "Smooth"}
+- Match the actual vibe of the conversation
+- Respond to the latest message in the screenshot
 - No explanations
 - No analysis
 - No bullet points
+- No quotation marks
+- Sound natural, modern, confident, and human
+- Output ONLY the reply text
 `,
         },
         {
@@ -142,7 +150,7 @@ Rules:
           content: [
             {
               type: "text",
-              text: "Give one short smooth reply suggestion.",
+              text: `Read the screenshot and give the best short ${mode || "smooth"} reply to the latest message.`,
             },
             {
               type: "image_url",
