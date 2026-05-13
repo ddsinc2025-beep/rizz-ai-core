@@ -16,7 +16,7 @@ app.use(cors());
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100
+    max: 100,
   })
 );
 
@@ -33,7 +33,7 @@ const pool = new Pool({
 
 app.get("/", (req, res) => {
   res.json({
-    status: "Rizz AI Backend Running",
+    status: "Rizz Coach Backend Running",
   });
 });
 
@@ -52,8 +52,20 @@ app.post("/chat", async (req, res) => {
       messages: [
         {
           role: "system",
-          content:
-            "You are a confident smooth dating and flirting coach.",
+          content: `
+You are Rizz Coach, an AI texting wingman.
+
+Rules:
+- Keep replies SHORT
+- Maximum 1 sentence
+- Maximum 12 words
+- No explanations
+- No analysis
+- No bullet points
+- No quotation marks
+- Sound natural, modern, confident, smooth
+- Output ONLY the reply text
+`,
         },
         {
           role: "user",
@@ -64,22 +76,20 @@ app.post("/chat", async (req, res) => {
 
     const reply = completion.choices[0].message.content;
 
-    await pool.query(
-      `
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS chats (
         id SERIAL PRIMARY KEY,
         user_message TEXT,
         ai_reply TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `
-    );
+    `);
 
     await pool.query(
       `
       INSERT INTO chats (user_message, ai_reply)
       VALUES ($1, $2)
-    `,
+      `,
       [message, reply]
     );
 
@@ -95,6 +105,7 @@ app.post("/chat", async (req, res) => {
     });
   }
 });
+
 app.post("/analyze-image", async (req, res) => {
   try {
     const { image } = req.body;
@@ -110,15 +121,28 @@ app.post("/analyze-image", async (req, res) => {
       messages: [
         {
           role: "system",
-          content:
-            "You are an expert dating and social coach. Analyze screenshots of conversations, dating profiles, or social media and give confident advice.",
+          content: `
+You are Rizz Coach.
+
+Analyze the screenshot and return ONLY:
+- 1 short reply suggestion
+
+Rules:
+- Under 10 words
+- Natural sounding
+- Confident
+- Smooth
+- No explanations
+- No analysis
+- No bullet points
+`,
         },
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: "Analyze this screenshot and give advice.",
+              text: "Give one short smooth reply suggestion.",
             },
             {
               type: "image_url",
@@ -145,7 +169,8 @@ app.post("/analyze-image", async (req, res) => {
     });
   }
 });
-const PORT = 3000;
+
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
