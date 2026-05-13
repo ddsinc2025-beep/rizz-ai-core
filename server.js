@@ -9,7 +9,7 @@ const { Pool } = require("pg");
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(helmet());
 app.use(cors());
 
@@ -95,7 +95,56 @@ app.post("/chat", async (req, res) => {
     });
   }
 });
+app.post("/analyze-image", async (req, res) => {
+  try {
+    const { image } = req.body;
 
+    if (!image) {
+      return res.status(400).json({
+        error: "Image required",
+      });
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an expert dating and social coach. Analyze screenshots of conversations, dating profiles, or social media and give confident advice.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Analyze this screenshot and give advice.",
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: image,
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const analysis = response.choices[0].message.content;
+
+    res.json({
+      success: true,
+      analysis,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Image analysis failed",
+    });
+  }
+});
 const PORT = 3000;
 
 app.listen(PORT, () => {
